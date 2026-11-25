@@ -43,7 +43,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/CreateArticleDto"
+                "$ref": "#/components/schemas/ArticleDto"
               }
             }
           },
@@ -74,6 +74,39 @@
             }
           }
         ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          }
+        }
+      },
+      "put": {
+        "tags": [
+          "Hírek"
+        ],
+        "operationId": "UpdateNews",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArticleDto"
+              }
+            }
+          },
+          "required": true
+        },
         "responses": {
           "200": {
             "description": "OK"
@@ -166,6 +199,43 @@
   },
   "components": {
     "schemas": {
+      "ArticleDto": {
+        "required": [
+          "title",
+          "summary",
+          "content",
+          "imageUrl",
+          "category"
+        ],
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "content": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "imageUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "category": {
+            "type": "string"
+          },
+          "isFeatured": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
       "AuthDto": {
         "required": [
           "username",
@@ -178,29 +248,6 @@
           },
           "password": {
             "type": "string"
-          }
-        }
-      },
-      "CreateArticleDto": {
-        "required": [
-          "title",
-          "summary",
-          "category"
-        ],
-        "type": "object",
-        "properties": {
-          "title": {
-            "type": "string"
-          },
-          "summary": {
-            "type": "string"
-          },
-          "category": {
-            "type": "string"
-          },
-          "isFeatured": {
-            "type": "boolean",
-            "default": false
           }
         }
       }

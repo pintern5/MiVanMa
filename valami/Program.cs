@@ -6,8 +6,8 @@ var builder = WebApplication.CreateBuilder(args);
 // 1. OpenAPI (Scalar-hoz szükséges)
 builder.Services.AddOpenApi();
 
-// 2. ADATBÁZIS KAPCSOLÓ (Most true = memóriában fut; ha kész a MySQL, írd át false-ra!)
-var useInMemory = true;
+// 2. ADATBÁZIS KAPCSOLÓ (Átállítva MySQL-re!)
+var useInMemory = false;
 
 if (useInMemory)
 {
@@ -32,28 +32,11 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// 4. Adatbázis létrehozása és mintaadatok betöltése induláskor
+// 4. Adatbázis kapcsolat ellenőrzése induláskor
 using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
-
-    if (!db.Articles.Any())
-    {
-        db.Articles.AddRange(
-            new Article { Title = "Megjelent a GTA VI új előzetese", Summary = "A Rockstar Games bemutatta a GTA VI legújabb trailerét, amely új szintre emeli a nyílt világú játékélményt…", Category = "Gaming", IsFeatured = true, PublishedAt = DateTime.Now.AddMinutes(-12) },
-            new Article { Title = "Új PS5 exkluzív", Summary = "A Sony nagy bejelentést tett…", Category = "Gaming", PublishedAt = DateTime.Now.AddHours(-3) },
-            new Article { Title = "Új OpenAI fejlesztés", Summary = "Az OpenAI új fejlesztése...", Category = "Tech", PublishedAt = DateTime.Now.AddMinutes(-38) },
-            new Article { Title = "Új iPhone érkezett", Summary = "Az Apple bemutatta legújabb modelljét…", Category = "Tech", PublishedAt = DateTime.Now.AddHours(-4) },
-            new Article { Title = "Újabb madridi győzelem", Summary = "Drámai hajrával nyert rangadót...", Category = "Sport", PublishedAt = DateTime.Now.AddHours(-2) },
-            new Article { Title = "NB I-ben meglepetés született", Summary = "Váratlan eredmény borzolta a kedélyeket a hétvégi fordulóban…", Category = "Sport", PublishedAt = DateTime.Now.AddHours(-1) },
-            new Article { Title = "Tesla új generációs elektromos autója", Summary = "Bemutatták a Tesla új generációs elektromos...", Category = "Autók", PublishedAt = DateTime.Now.AddHours(-2) },
-            new Article { Title = "Bemutatkozott az új BMW modell", Summary = "Sportos dizájn és nagyobb hatótáv…", Category = "Autók", PublishedAt = DateTime.Now.AddHours(-5) },
-            new Article { Title = "Energiaárak csökkenése", Summary = "Új intézkedéseket jelentett be a kormány...", Category = "Közélet", PublishedAt = DateTime.Now.AddHours(-3) },
-            new Article { Title = "Tüntetések több nagyvárosban", Summary = "Ezrek vonultak utcára a hétvégén…", Category = "Közélet", PublishedAt = DateTime.Now.AddHours(-6) }
-        );
-        db.SaveChanges();
-    }
 }
 
 // 5. Frontend kiszolgálása a wwwroot mappából (fo.html mint kezdőlap)
@@ -93,24 +76,32 @@ app.MapGet("/api/news", async (AppDbContext db, string? category) =>
 .WithName("GetNews")
 .WithTags("Hírek");
 
-// Egy konkrét hír ID alapján
+// Egy konkrét hír ID alapján (és növeli az olvasottságot)
 app.MapGet("/api/news/{id:int}", async (AppDbContext db, int id) =>
 {
     var article = await db.Articles.FindAsync(id);
-    return article is not null ? Results.Ok(article) : Results.NotFound("A hír nem található.");
+    if (article is null) return Results.NotFound("A hír nem található.");
+
+    article.Views++;
+    await db.SaveChangesAsync();
+
+    return Results.Ok(article);
 })
 .WithName("GetNewsById")
 .WithTags("Hírek");
 
-// Új hír hozzáadása
-app.MapPost("/api/news", async (AppDbContext db, CreateArticleDto dto) =>
+// Új hír hozzáadása (Admin)
+app.MapPost("/api/news", async (AppDbContext db, ArticleDto dto) =>
 {
     var newArticle = new Article
     {
         Title = dto.Title,
         Summary = dto.Summary,
+        Content = dto.Content,
+        ImageUrl = dto.ImageUrl,
         Category = dto.Category,
         IsFeatured = dto.IsFeatured,
+        Views = 0,
         PublishedAt = DateTime.Now
     };
 
@@ -122,7 +113,26 @@ app.MapPost("/api/news", async (AppDbContext db, CreateArticleDto dto) =>
 .WithName("CreateNews")
 .WithTags("Hírek");
 
-// Hír törlése
+// Hír módosítása (Admin)
+app.MapPut("/api/news/{id:int}", async (AppDbContext db, int id, ArticleDto dto) =>
+{
+    var article = await db.Articles.FindAsync(id);
+    if (article is null) return Results.NotFound("A hír nem található.");
+
+    article.Title = dto.Title;
+    article.Summary = dto.Summary;
+    article.Content = dto.Content;
+    article.ImageUrl = dto.ImageUrl;
+    article.Category = dto.Category;
+    article.IsFeatured = dto.IsFeatured;
+
+    await db.SaveChangesAsync();
+    return Results.Ok(article);
+})
+.WithName("UpdateNews")
+.WithTags("Hírek");
+
+// Hír törlése (Admin)
 app.MapDelete("/api/news/{id:int}", async (AppDbContext db, int id) =>
 {
     var article = await db.Articles.FindAsync(id);
@@ -135,24 +145,26 @@ app.MapDelete("/api/news/{id:int}", async (AppDbContext db, int id) =>
 .WithName("DeleteNews")
 .WithTags("Hírek");
 
-// Oldalsáv adatok
+// Oldalsáv adatok (valódi adatbázisból számolva)
 app.MapGet("/api/sidebar", async (AppDbContext db) =>
 {
     var latest = await db.Articles.OrderByDescending(a => a.PublishedAt).Take(4).ToListAsync();
+    var mostRead = await db.Articles.OrderByDescending(a => a.Views).Take(3).Select(a => a.Title).ToListAsync();
     var totalCount = await db.Articles.CountAsync();
+    var totalViews = await db.Articles.SumAsync(a => a.Views);
 
     return Results.Ok(new
     {
         Latest = latest,
-        MostRead = new[] { "GTA VI minden részlet", "Új Apple termék", "Magyar gazdasági fordulat" },
-        Stats = new { NewsToday = totalCount, TotalReads = 12458, TopCategory = "Gaming" },
+        MostRead = mostRead.Any() ? mostRead : new List<string> { "GTA VI minden részlet", "Új Apple termék", "Magyar gazdasági fordulat" },
+        Stats = new { NewsToday = totalCount, TotalReads = totalViews, TopCategory = "Gaming" },
         Trending = new[] { "#AI", "#GTA6", "#Apple", "#MagyarSport" }
     });
 })
 .WithName("GetSidebar")
 .WithTags("Oldalsáv");
 
-// Regisztráció (auth.js-hez)
+// Regisztráció
 app.MapPost("/api/register", async (AppDbContext db, AuthDto dto) =>
 {
     if (string.IsNullOrWhiteSpace(dto.Username) || string.IsNullOrWhiteSpace(dto.Password))
@@ -162,23 +174,28 @@ app.MapPost("/api/register", async (AppDbContext db, AuthDto dto) =>
     if (exists)
         return Results.BadRequest(new { Message = "Ez a felhasználónév már foglalt!" });
 
-    var user = new User { Username = dto.Username, Password = dto.Password };
+    var user = new User 
+    { 
+        Username = dto.Username, 
+        Password = dto.Password,
+        Role = "User"
+    };
     db.Users.Add(user);
     await db.SaveChangesAsync();
 
-    return Results.Ok(new { Message = "Sikeres regisztráció!", Username = user.Username });
+    return Results.Ok(new { Message = "Sikeres regisztráció!", Username = user.Username, Role = user.Role });
 })
 .WithName("Register")
 .WithTags("Felhasználók");
 
-// Bejelentkezés (auth.js-hez)
+// Bejelentkezés
 app.MapPost("/api/login", async (AppDbContext db, AuthDto dto) =>
 {
     var user = await db.Users.FirstOrDefaultAsync(u => u.Username == dto.Username && u.Password == dto.Password);
     if (user is null)
         return Results.Unauthorized();
 
-    return Results.Ok(new { Message = "Sikeres bejelentkezés!", Username = user.Username });
+    return Results.Ok(new { Message = "Sikeres bejelentkezés!", Username = user.Username, Role = user.Role });
 })
 .WithName("Login")
 .WithTags("Felhasználók");
@@ -198,8 +215,11 @@ public class Article
     public int Id { get; set; }
     public string Title { get; set; } = string.Empty;
     public string Summary { get; set; } = string.Empty;
+    public string? Content { get; set; }
+    public string? ImageUrl { get; set; }
     public string Category { get; set; } = string.Empty;
     public bool IsFeatured { get; set; }
+    public int Views { get; set; }
     public DateTime PublishedAt { get; set; }
 }
 
@@ -208,7 +228,8 @@ public class User
     public int Id { get; set; }
     public string Username { get; set; } = string.Empty;
     public string Password { get; set; } = string.Empty;
+    public string Role { get; set; } = "User";
 }
 
-public record CreateArticleDto(string Title, string Summary, string Category, bool IsFeatured = false);
+public record ArticleDto(string Title, string Summary, string? Content, string? ImageUrl, string Category, bool IsFeatured = false);
 public record AuthDto(string Username, string Password);

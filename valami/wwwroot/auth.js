@@ -1,5 +1,5 @@
 let isLoggedIn = false;
-let registeredUser = null;
+const API_URL = "/api"; // A C# backend API útvonala
 
 /* ===== INPUTOK ===== */
 const username = document.getElementById('username');
@@ -26,10 +26,8 @@ function showToast(message, type = "info") {
   }, 3000);
 }
 
+/* ===== BEJELENTKEZÉSI ÁLLAPOT VISSZATÖLTÉSE ===== */
 try {
-  const storedUser = localStorage.getItem("registeredUser");
-  if (storedUser) registeredUser = JSON.parse(storedUser);
-
   if (localStorage.getItem("isLoggedIn") === "true") {
     isLoggedIn = true;
     const user = localStorage.getItem("loggedInUser");
@@ -45,14 +43,7 @@ loginBtn.addEventListener('click', () => {
   else modal.style.display = 'flex';
 });
 
-
-/* ===== LOGIN GOMB ===== */
-loginBtn.addEventListener('click', () => {
-  if (isLoggedIn) logout();
-  else modal.style.display = 'flex';
-});
-
-/* TABOK */
+/* ===== TABOK ===== */
 loginTab.addEventListener('click', () => {
   formTitle.textContent = 'Bejelentkezés';
   password2.style.display = 'none';
@@ -73,8 +64,8 @@ registerTab.addEventListener('click', () => {
   loginTab.classList.remove('active');
 });
 
-/* ===== REGISZTRÁCIÓ ===== */
-function register() {
+/* ===== REGISZTRÁCIÓ (MYSQL ADATBÁZISBA) ===== */
+async function register() {
   const user = username.value.trim();
   const p1 = password.value.trim();
   const p2 = password2.value.trim();
@@ -82,29 +73,63 @@ function register() {
   if (!user || !p1 || !p2) return showToast('Tölts ki minden mezőt', 'error');
   if (p1 !== p2) return showToast('A jelszavak nem egyeznek', 'error');
 
-  registeredUser = { username: user, password: p1 };
-  localStorage.setItem("registeredUser", JSON.stringify(registeredUser)); // mentés
+  try {
+    const response = await fetch(`${API_URL}/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: p1 })
+    });
 
-  showToast('Sikeres regisztráció! Most jelentkezz be.', 'success');
-  loginTab.click();
+    const data = await response.json();
+
+    if (response.ok) {
+      showToast(data.message || 'Sikeres regisztráció! Most jelentkezz be.', 'success');
+      password.value = '';
+      password2.value = '';
+      loginTab.click(); // Átvált a bejelentkezés fülre
+    } else {
+      showToast(data.message || 'Hiba a regisztráció során!', 'error');
+    }
+  } catch (error) {
+    console.error('Hálózati hiba:', error);
+    showToast('Nem sikerült elérni a szervert!', 'error');
+  }
 }
 
-/* ===== LOGIN ===== */
-function login() {
+/* ===== LOGIN (MYSQL ADATBÁZISBÓL) ===== */
+async function login() {
   const user = username.value.trim();
   const pass = password.value.trim();
 
-  if (!registeredUser) return showToast('Először regisztrálj!', 'error');
+  if (!user || !pass) return showToast('Add meg a felhasználónevet és a jelszót!', 'error');
 
-  if (user === registeredUser.username && pass === registeredUser.password) {
-    isLoggedIn = true;
-    loginBtn.textContent = user + ' (Kijelentkezés)';
-    localStorage.setItem("isLoggedIn", true);       // mentés
-    localStorage.setItem("loggedInUser", user);       // mentés
+  try {
+    const response = await fetch(`${API_URL}/login`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username: user, password: pass })
+    });
 
-    showToast('Sikeres bejelentkezés', 'success');
-    closeModal();
-  } else showToast('Hibás adatok', 'error');
+    if (response.ok) {
+      const data = await response.json();
+      isLoggedIn = true;
+      loginBtn.textContent = data.username + ' (Kijelentkezés)';
+      
+      // Elmentjük a munkamenetet és a szerepkört (későbbi admin felülethez)
+      localStorage.setItem("isLoggedIn", "true");
+      localStorage.setItem("loggedInUser", data.username);
+      if (data.role) localStorage.setItem("userRole", data.role);
+
+      showToast(data.message || 'Sikeres bejelentkezés', 'success');
+      password.value = '';
+      closeModal();
+    } else {
+      showToast('Hibás felhasználónév vagy jelszó!', 'error');
+    }
+  } catch (error) {
+    console.error('Hálózati hiba:', error);
+    showToast('Nem sikerült elérni a szervert!', 'error');
+  }
 }
 
 /* ===== LOGOUT ===== */
@@ -113,6 +138,7 @@ function logout() {
   loginBtn.textContent = 'Bejelentkezés';
   localStorage.removeItem("isLoggedIn");
   localStorage.removeItem("loggedInUser");
+  localStorage.removeItem("userRole");
   showToast('Kijelentkeztél', 'info');
 }
 
@@ -123,4 +149,3 @@ function closeModal() {
 
 /* Alapértelmezett regisztráció tab */
 registerTab.click();
-
