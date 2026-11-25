@@ -1,0 +1,6 @@
+@valami_HostAddress = http://localhost:5261
+
+GET {{valami_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###

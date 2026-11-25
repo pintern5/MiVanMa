@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="auth.css">
+  <title>Rólunk – MiVanMa</title>
+
+  <style>
+    main {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 16px;
+    }
+
+    .about {
+      background: var(--card);
+      padding: 32px;
+      border-radius: 16px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.08);
+      margin-bottom: 48px;
+    }
+
+    .about h1 {
+      margin-top: 0;
+      font-size: 2rem;
+    }
+
+    .about p {
+      line-height: 1.7;
+      font-size: 1.05rem;
+      color: #374151;
+    }
+
+    .team-title {
+      font-size: 1.8rem;
+      margin-bottom: 24px;
+    }
+
+    .team-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+
+    .journalist-card {
+      background: var(--card);
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 14px 35px rgba(0, 0, 0, 0.1);
+      transition: transform 0.2s ease;
+    }
+
+    .journalist-card:hover {
+      transform: translateY(-6px);
+    }
+
+    .journalist-card img {
+      width: 100%;
+      height: 260px;
+      object-fit: cover;
+    }
+
+    .journalist-content {
+      padding: 20px;
+    }
+
+    .journalist-content h3 {
+      margin: 0 0 6px;
+      font-size: 1.2rem;
+    }
+
+    .role {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    .journalist-content p {
+      font-size: 0.95rem;
+      color: #4b5563;
+      line-height: 1.6;
+    }
+
+    footer {
+      margin-top: 60px;
+      padding: 24px;
+      text-align: center;
+      background: #7f1d1d;
+      color: #fee2e2;
+      font-size: 0.85rem;
+    }
+
+    @media (max-width: 900px) {
+      .team-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ===== NAVBAR ===== */
+
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: #e5e7eb;
+      color: #000;
+    }
+
+    /* ===== FIX NAVBAR LAYOUT ===== */
+    * {
+      box-sizing: border-box;
+    }
+
+    header {
+      width: 100%;
+    }
+
+    .topbar {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 12px 16px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .search {
+      flex: 1;
+    }
+
+    /* ===== FIX MODAL LAYOUT ===== */
+    .modal-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .modal-content h2 {
+      margin-top: 0;
+      margin-bottom: 14px;
+    }
+
+    .auth-tabs {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .modal-content input {
+      width: 100%;
+    }
+
+    #submitBtn {
+      width: 100%;
+      padding: 12px;
+      border-radius: 12px;
+      border: none;
+      font-weight: 700;
+      cursor: pointer;
+      background: linear-gradient(135deg, #7f1d1d, #991b1b);
+      color: #fff;
+      margin-top: 6px;
+    }
+
+
+    #submitBtn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 14px rgba(0, 0, 0, 0.15);
+    }
+
+    .search input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      outline: none;
+      transition: .2s;
+    }
+
+    .search input:focus {
+      border-color: #7f1d1d;
+      background: white;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search-results {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      z-index: 999;
+      display: none;
+    }
+
+    .search-results.show {
+      display: block;
+    }
+
+    .search-result-item {
+      display: block;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: #111;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.2s ease;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: #f9fafb;
+    }
+
+    .search-result-category {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #991b1b;
+      margin-bottom: 6px;
+    }
+
+    .search-result-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .search-result-desc {
+      font-size: 0.84rem;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+
+    .search-no-result {
+      padding: 14px 16px;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+
+<body>
+  <div id="toast"></div>
+  <header>
+    <div class="topbar">
+      <a href="fo.html" class="logo" style="display:flex;align-items:center;gap:8px;">
+        <img src="logo.png" style="height:28px;">
+        <span>MiVanMa</span>
+      </a>
+
+      <div class="search">
+        <input type="text" id="newsSearch" placeholder="Keresés a hírek között…" autocomplete="off" />
+        <div id="searchResults" class="search-results"></div>
+      </div>
+
+      <div class="nav">
+        <a href="fo.html" class="nav-link">Friss</a>
+        <a href="szemelyre.html" class="nav-link">Személyre szabott</a>
+        <a href="rolunk.html" class="nav-link">Rólunk</a>
+        <button id="loginBtn" class="primary">Bejelentkezés</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">×</button>
+
+      <div class="auth-tabs">
+        <button id="loginTab" class="active">Bejelentkezés</button>
+        <button id="registerTab">Regisztráció</button>
+      </div>
+
+      <h2 id="formTitle">Bejelentkezés</h2>
+      <input type="text" id="username" placeholder="Felhasználónév">
+      <input type="password" id="password" placeholder="Jelszó">
+      <input type="password" id="password2" placeholder="Jelszó újra" style="display:none;">
+      <button id="submitBtn" onclick="login()">Belépés</button>
+    </div>
+  </div>
+
+
+  <main>
+
+    <!-- RÓLUNK -->
+    <section class="about">
+      <h1>Rólunk</h1>
+      <p>
+        A <strong>MiVanMa</strong> egy modern, független hírportál, amelynek célja,
+        hogy a legfontosabb napi eseményeket gyorsan, érthetően és sallangmentesen
+        juttassa el az olvasókhoz.
+      </p>
+      <p>
+        Foglalkozunk technológiával, gaminggel, sporttal, autókkal és közélettel.
+        Hiszünk abban, hogy a híreknek nem unalmasnak, hanem átláthatónak és relevánsnak
+        kell lenniük – pontosan úgy, ahogy ma fogyasztjuk az információt.
+      </p>
+    </section>
+
+    <!-- CSAPAT -->
+    <h2 class="team-title">📰 Szerkesztőség</h2>
+
+    <section class="team-grid">
+
+      <div class="journalist-card">
+        <img src="martin.jpg" alt="Újságíró">
+        <div class="journalist-content">
+          <span class="role">Főszerkesztő</span>
+          <h3>Tóth Martin</h3>
+          <p>
+            Több mint 10 éve foglalkozik az alkoholok fogyasztásával.
+          </p>
+        </div>
+      </div>
+
+      <div class="journalist-card">
+        <img src="Képernyőkép 2026-02-08 174758.png" alt="Újságíró">
+        <div class="journalist-content">
+          <span class="role">Pénzügyi szakértő</span>
+          <h3>Pintér Norbert</h3>
+          <p>
+            Kaszinóra specializálódott fiatalember.
+          </p>
+        </div>
+      </div>
+
+      <div class="journalist-card">
+        <img src="milan.jpg" alt="Újságíró">
+        <div class="journalist-content">
+          <span class="role">nem ert semmihez</span>
+          <h3>Himer Milán</h3>
+          <p>
+            Legprofibb zsebhokis mindközül.
+          </p>
+        </div>
+      </div>
+
+    </section>
+
+  </main>
+
+  <footer>
+    © 2026 MiVanMa – minden jog fenntartva
+  </footer>
+
+  <script src="auth.js"></script>
+
+  <script>
+    const searchInput = document.getElementById("newsSearch");
+    const searchResults = document.getElementById("searchResults");
+
+    function normalizeText(text) {
+      return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function getSearchItems() {
+      const items = [];
+      const links = document.querySelectorAll("a[href]");
+
+      links.forEach(link => {
+        const card = link.querySelector(".card, .footer-news-card");
+        if (!card) return;
+
+        const title =
+          card.querySelector("h3, h4")?.textContent?.trim() || "";
+
+        const desc =
+          card.querySelector("p")?.textContent?.trim() || "";
+
+        const category =
+          card.querySelector(".category")?.textContent?.trim() || "Hír";
+
+        const href = link.getAttribute("href");
+
+        if (!title || !href || href === "#") return;
+
+        items.push({
+          title,
+          desc,
+          category,
+          href,
+          text: normalizeText(title + " " + desc + " " + category)
+        });
+      });
+
+      return items;
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        searchResults.innerHTML = `<div class="search-no-result">Nincs találat.</div>`;
+        searchResults.classList.add("show");
+        return;
+      }
+
+      searchResults.innerHTML = results.map(item => `
+      <a class="search-result-item" href="${item.href}">
+        <div class="search-result-category">${item.category}</div>
+        <div class="search-result-title">${item.title}</div>
+        <div class="search-result-desc">${item.desc}</div>
+      </a>
+    `).join("");
+
+      searchResults.classList.add("show");
+    }
+
+    searchInput.addEventListener("input", () => {
+      const query = normalizeText(searchInput.value);
+
+      if (!query) {
+        searchResults.innerHTML = "";
+        searchResults.classList.remove("show");
+        return;
+      }
+
+      const items = getSearchItems();
+
+      const uniqueResults = items.filter(
+        (item, index, self) =>
+          index === self.findIndex(other => other.href === item.href)
+      );
+
+      const matches = uniqueResults
+        .filter(item => item.text.includes(query))
+        .slice(0, 6);
+
+      renderResults(matches);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".search").contains(e.target)) {
+        searchResults.classList.remove("show");
+      }
+    });
+
+    searchInput.addEventListener("focus", () => {
+      if (searchInput.value.trim() !== "" && searchResults.innerHTML.trim() !== "") {
+        searchResults.classList.add("show");
+      }
+    });
+  </script>
+
+</body>
+
+</html>
