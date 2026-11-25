@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="hu">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="auth.css">
+  <title>MiVanMa – Összes tech hír</title>
+  <link rel="icon" href="favicon.ico">
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    main {
+      max-width: 1200px;
+      margin: 24px auto;
+      padding: 0 16px;
+      display: grid;
+      grid-template-columns: 3fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+
+    .hero {
+      background: var(--card);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .category-line {
+      border-radius: 16px;
+      padding: 20px 20px 24px;
+      position: relative;
+      overflow: hidden;
+      margin-bottom: 28px;
+      background: #eef2ff;
+    }
+
+    .category-line::before {
+      content: "";
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 6px;
+      height: 100%;
+      border-radius: 6px;
+      background: #2563eb;
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .category-header h2 {
+      margin: 0;
+      font-size: 1.4rem;
+    }
+
+    .category-header a {
+      font-size: 0.9rem;
+      text-decoration: none;
+      font-weight: 600;
+      color: #2563eb;
+    }
+
+    .category-news {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .news-page {
+      display: none;
+    }
+
+    .news-page.active {
+      display: grid;
+    }
+
+    .category-news>.card-link {
+      display: block;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .card {
+      background: var(--card);
+      border-radius: 14px;
+      padding: 18px;
+      border: 1px solid var(--border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      transition: transform 0.2s ease;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+    }
+
+    .card p {
+      margin-bottom: 12px;
+    }
+
+    .card-image {
+      width: 100%;
+      height: 180px;
+      object-fit: cover;
+      border-radius: 12px;
+      margin-top: auto;
+      display: block;
+    }
+
+    .category {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin-bottom: 6px;
+      display: inline-block;
+    }
+
+    aside .card {
+      margin-bottom: 16px;
+    }
+
+    .sidebar-block h3 {
+      margin-bottom: 12px;
+      font-size: 1.05rem;
+    }
+
+    .latest-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .latest-list li {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      padding: 10px 0;
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .latest-list li:last-child {
+      border-bottom: none;
+    }
+
+    .latest-list .time {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: #991b1b;
+    }
+
+    .latest-list a {
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .latest-list a:hover {
+      text-decoration: underline;
+    }
+
+    .recommend {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .recommend a {
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 600;
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: #f3f4f6;
+      color: #111;
+      transition: background 0.2s ease, transform 0.2s ease;
+    }
+
+    .recommend a:hover {
+      background: #e5e7eb;
+      transform: translateX(3px);
+    }
+
+    .popular {
+      margin: 0;
+      padding-left: 18px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .popular a {
+      text-decoration: none;
+      font-weight: 600;
+      color: #111;
+    }
+
+    .popular a:hover {
+      text-decoration: underline;
+    }
+
+    .tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tags span {
+      background: #f3f4f6;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+
+    .search {
+      position: relative;
+    }
+
+    .search input {
+      width: 100%;
+      padding: 10px 14px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #f9fafb;
+      outline: none;
+      transition: .2s;
+    }
+
+    .search input:focus {
+      border-color: #7f1d1d;
+      background: white;
+    }
+
+    .search-results {
+      position: absolute;
+      top: calc(100% + 8px);
+      left: 0;
+      width: 100%;
+      background: white;
+      border: 1px solid #e5e7eb;
+      border-radius: 14px;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.12);
+      overflow: hidden;
+      z-index: 999;
+      display: none;
+    }
+
+    .search-results.show {
+      display: block;
+    }
+
+    .search-result-item {
+      display: block;
+      padding: 14px 16px;
+      text-decoration: none;
+      color: #111;
+      border-bottom: 1px solid #f1f5f9;
+      transition: background 0.2s ease;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: #f9fafb;
+    }
+
+    .search-result-category {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 800;
+      color: #991b1b;
+      margin-bottom: 6px;
+    }
+
+    .search-result-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 4px;
+    }
+
+    .search-result-desc {
+      font-size: 0.84rem;
+      color: #6b7280;
+      line-height: 1.4;
+    }
+
+    .search-no-result {
+      padding: 14px 16px;
+      color: #6b7280;
+      font-size: 0.9rem;
+    }
+
+    .pagination {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .page-btn {
+      min-width: 42px;
+      height: 42px;
+      border: 1px solid #d1d5db;
+      background: white;
+      color: #111;
+      border-radius: 10px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .page-btn:hover {
+      background: #f3f4f6;
+      transform: translateY(-2px);
+    }
+
+    .page-btn.active {
+      background: linear-gradient(135deg, #7f1d1d, #991b1b);
+      color: white;
+      border-color: transparent;
+    }
+
+    .news-footer {
+      background: linear-gradient(135deg, #450a0a, #7f1d1d);
+      color: #fee2e2;
+      padding: 32px 16px 24px;
+      margin-top: 60px;
+      position: relative;
+      z-index: 1;
+      clear: both;
+    }
+
+    .news-footer h3 {
+      max-width: 1200px;
+      margin: 0 auto 16px;
+      font-size: 1.3rem;
+      color: #fecaca;
+    }
+
+    .footer-news-scroll {
+      max-width: 1200px;
+      margin: auto;
+      display: flex;
+      gap: 16px;
+      overflow-x: auto;
+      padding-bottom: 12px;
+      scroll-snap-type: x mandatory;
+    }
+
+    .footer-news-scroll::-webkit-scrollbar {
+      height: 8px;
+    }
+
+    .footer-news-scroll::-webkit-scrollbar-thumb {
+      background: #991b1b;
+      border-radius: 6px;
+    }
+
+    .footer-news-card {
+      min-width: 260px;
+      background: #7f1d1d;
+      border-radius: 14px;
+      padding: 16px;
+      scroll-snap-align: start;
+      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.4);
+      transition: transform 0.2s ease, background 0.2s ease;
+      flex: 0 0 auto;
+    }
+
+    .footer-news-card:hover {
+      transform: translateY(-4px);
+      background: #991b1b;
+    }
+
+    .footer-news-card .category {
+      font-size: 0.7rem;
+      font-weight: 800;
+      color: #fecaca;
+      display: inline-block;
+      margin-bottom: 6px;
+    }
+
+    .footer-news-card h4 {
+      margin: 0 0 6px;
+      font-size: 1rem;
+      color: #fff;
+    }
+
+    .footer-news-card p {
+      font-size: 0.85rem;
+      color: #fee2e2;
+    }
+
+    .footer-copy {
+      text-align: center;
+      margin-top: 22px;
+      font-size: 0.8rem;
+      color: #fecaca;
+    }
+
+    .modal {
+      display: none;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 14px;
+      right: 14px;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #f3f4f6;
+      border: none;
+      font-size: 18px;
+      cursor: pointer;
+      color: #555;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .close-btn:hover {
+      background: #e5e7eb;
+      color: #000;
+    }
+
+    #submitBtn {
+      width: 100%;
+      padding: 14px;
+      margin-top: 6px;
+      border-radius: 12px;
+      border: none;
+      background: linear-gradient(135deg, #7f1d1d, #991b1b);
+      color: white;
+      font-weight: 700;
+      font-size: 0.95rem;
+      cursor: pointer;
+      box-shadow: 0 10px 20px rgba(37, 99, 235, 0.35);
+      transition: all 0.2s ease;
+    }
+
+    #submitBtn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 28px rgba(37, 99, 235, 0.45);
+    }
+
+    #loginModal .auth-tabs button {
+      all: unset;
+      flex: 1;
+      padding: 12px;
+      border-radius: 10px;
+      border: 1px solid #e5e7eb;
+      background: #f3f4f6;
+      color: #111;
+      font-weight: 600;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.2s;
+    }
+
+    #loginModal .auth-tabs button.active {
+      background: linear-gradient(135deg, #7f1d1d, #991b1b);
+      color: white;
+      border: none;
+    }
+
+    @media (max-width: 900px) {
+      main {
+        grid-template-columns: 1fr;
+      }
+
+      .category-news {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="toast"></div>
+
+  <header>
+    <div class="topbar">
+      <a href="fo.html" class="logo"
+        style="display:flex;align-items:center;gap:8px;text-decoration:none;color:inherit;">
+        <img src="logo.png" alt="MiVanMa logó" style="height:28px;width:auto;" />
+        <span>MiVanMa</span>
+      </a>
+
+      <div class="search">
+        <input type="text" id="newsSearch" placeholder="Keresés a hírek között…" autocomplete="off" />
+        <div id="searchResults" class="search-results"></div>
+      </div>
+
+      <div class="nav">
+        <a href="#" class="nav-link">Friss</a>
+        <a href="szemelyre.html" class="nav-link">Személyre szabott</a>
+        <a href="rolunk.html" class="nav-link">Rólunk</a>
+        <button id="loginBtn" class="primary">Bejelentkezés</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <section>
+      <div class="hero">
+        <h1>💻 Összes tech hír</h1>
+        <p>A legfrissebb technológiai hírek, fejlesztések és digitális újdonságok egy helyen.</p>
+      </div>
+
+      <div class="category-line">
+        <div class="category-header">
+          <h2>Tech hírek</h2>
+          <a href="fo.html">← Vissza a főoldalra</a>
+        </div>
+
+        <div class="news-pages">
+          <div class="category-news news-page active" data-page="1">
+            <a class="card-link" href="tech.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Új OpenAI fejlesztés</h3>
+                <p>Az OpenAI új fejlesztése...</p>
+                <img class="card-image" src="images/tech1.webp" alt="Mesterséges intelligencia és technológia">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech2.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Új iPhone érkezett</h3>
+                <p>Az Apple bemutatta legújabb modelljét…</p>
+                <img class="card-image" src="images/tech2.webp" alt="Új iPhone készülék">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech3.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Globális kibertámadás</h3>
+                <p>Több európai cég rendszere is leállt…</p>
+                <img class="card-image" src="images/tech3.webp" alt="Kibervédelem és hackertámadás">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech4.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>AI-alapú kereső jön Európába</h3>
+                <p>Új generációs keresőszolgáltatás érkezhet mesterséges intelligenciával támogatva…</p>
+                <img class="card-image" src="images/tech4.jpg" alt="AI alapú kereső">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech5.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Hatalmas chipberuházás indul</h3>
+                <p>Több milliárd eurós fejlesztés indul a félvezetőiparban…</p>
+                <img class="card-image" src="images/tech5.jpg" alt="Chipgyártás és félvezetők">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech6.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Új Windows funkciók érkeznek</h3>
+                <p>A Microsoft több praktikus újítást is bevezet a rendszerében…</p>
+                <img class="card-image" src="images/tech6.jpeg" alt="Windows frissítés">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech7.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Okosórák új generációja debütált</h3>
+                <p>Fejlettebb egészségfigyelés és hosszabb üzemidő az új modellekben…</p>
+                <img class="card-image" src="images/tech7.webp" alt="Okosóra technológia">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech8.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Robotika a gyárakban</h3>
+                <p>Egyre gyorsabban terjednek az automatizált gyártósorok Európában…</p>
+                <img class="card-image" src="images/tech8.webp" alt="Ipari robotika">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech9.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Forradalmi akkumulátortechnológia</h3>
+                <p>Gyorsabb töltést és jobb teljesítményt ígér az új fejlesztés…</p>
+                <img class="card-image" src="images/tech9.jpg" alt="Új akkumulátor technológia">
+              </div>
+            </a>
+          </div>
+
+          <div class="category-news news-page" data-page="2">
+            <a class="card-link" href="tech10.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Új VR headset érkezik</h3>
+                <p>A következő generációs eszköz élesebb képet és gyorsabb reakcióidőt kínál…</p>
+                <img class="card-image" src="images/tech10.jpg" alt="VR headset technológia">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech11.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Felhőszolgáltatások új korszaka</h3>
+                <p>Egyre több vállalat áll át hibrid és AI-támogatott infrastruktúrára…</p>
+                <img class="card-image" src="images/tech11.jpg" alt="Felhőalapú szolgáltatások">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech12.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Új generációs processzorok jönnek</h3>
+                <p>Nagyobb teljesítmény és alacsonyabb fogyasztás várható az új chipektől…</p>
+                <img class="card-image" src="images/tech12.webp" alt="Processzor fejlesztések">
+              </div>
+            </a>
+
+            <a class="card-link" href="tech13.html">
+              <div class="card">
+                <span class="category">💻 Tech</span>
+                <h3>Okosotthon eszközök terjedése</h3>
+                <p>Egyre népszerűbbek az automatizált, hangvezérelt otthoni rendszerek…</p>
+                <img class="card-image" src="images/tech13.png" alt="Okosotthon rendszerek">
+              </div>
+            </a>
+          </div>
+
+          <div class="pagination">
+            <button class="page-btn active" data-page="1">1</button>
+            <button class="page-btn" data-page="2">2</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <aside>
+      <div class="card sidebar-block">
+        <h3>🕒 Legfrissebb hírek</h3>
+
+        <ul class="latest-list">
+          <li>
+            <span class="time">12 perce</span>
+            <a href="gta.html">Új GTA VI információk szivárogtak ki</a>
+          </li>
+
+          <li>
+            <span class="time">38 perce</span>
+            <a href="tech.html">AI-alapú kereső jön Európába</a>
+          </li>
+
+          <li>
+            <span class="time">1 órája</span>
+            <a href="#">NB I: váratlan edzőváltás</a>
+          </li>
+
+          <li>
+            <span class="time">2 órája</span>
+            <a href="auto.html">Elektromos autók ára csökkenhet</a>
+          </li>
+        </ul>
+      </div>
+
+      <div class="card sidebar-block">
+        <h3>⭐ Neked ajánljuk</h3>
+
+        <div class="recommend">
+          <a href="gta.html">🎮 Miért a GTA VI lesz az évtized játéka?</a>
+          <a href="#">💻 5 tech trend, ami felforgatja 2025-öt</a>
+          <a href="#">🏛️ Mi változik az új törvényekkel?</a>
+        </div>
+      </div>
+
+      <div class="card sidebar-block">
+        <h3>🔥 Legolvasottabb</h3>
+        <ol class="popular">
+          <li><a href="gta.html">GTA VI minden részlet</a></li>
+          <li><a href="#">Új Apple termék</a></li>
+          <li><a href="#">Magyar gazdasági fordulat</a></li>
+        </ol>
+      </div>
+
+      <div class="card sidebar-block stats">
+        <h3>📊 Mai stat</h3>
+        <div>📰 24 hír ma</div>
+        <div>👁 12 458 olvasás</div>
+        <div>🔥 Top kategória: Gaming</div>
+      </div>
+
+      <div class="card sidebar-block">
+        <h3>📌 Trending</h3>
+        <div class="tags">
+          <span>#AI</span>
+          <span>#GTA6</span>
+          <span>#Apple</span>
+          <span>#MagyarSport</span>
+        </div>
+      </div>
+    </aside>
+  </main>
+
+  <footer class="news-footer">
+    <h3>📰 További hírek</h3>
+
+    <div class="footer-news-scroll">
+      <div class="footer-news-card">
+        <span class="category">Tech</span>
+        <h4>Új AI-eszköz érkezett</h4>
+        <p>Az új fejlesztés gyorsabb és pontosabb...</p>
+      </div>
+
+      <div class="footer-news-card">
+        <span class="category">Sport</span>
+        <h4>NB I meglepetés eredmény</h4>
+        <p>Váratlan fordulat a bajnokságban...</p>
+      </div>
+
+      <div class="footer-news-card gaming">
+        <span class="category">Gaming</span>
+        <h4>Új GTA Online frissítés</h4>
+        <p>Új küldetések és járművek...</p>
+      </div>
+
+      <div class="footer-news-card">
+        <span class="category">Autók</span>
+        <h4>Elektromos SUV bemutató</h4>
+        <p>Nagyobb hatótáv, alacsonyabb ár...</p>
+      </div>
+
+      <div class="footer-news-card">
+        <span class="category">Közélet</span>
+        <h4>Új döntések születtek</h4>
+        <p>Fontos változások jönnek...</p>
+      </div>
+    </div>
+
+    <p class="footer-copy">© 2026 MiVanMa – minden jog fenntartva</p>
+  </footer>
+
+  <div class="modal" id="loginModal">
+    <div class="modal-content">
+      <button class="close-btn" onclick="closeModal()">×</button>
+
+      <div class="auth-tabs">
+        <button id="loginTab" class="active">Bejelentkezés</button>
+        <button id="registerTab">Regisztráció</button>
+      </div>
+
+      <h2 id="formTitle">Bejelentkezés</h2>
+      <input type="text" id="username" placeholder="Felhasználónév">
+      <input type="password" id="password" placeholder="Jelszó">
+      <input type="password" id="password2" placeholder="Jelszó újra" style="display:none;">
+      <button id="submitBtn" onclick="login()">Belépés</button>
+    </div>
+  </div>
+
+  <script src="auth.js"></script>
+
+  <script>
+    const searchInput = document.getElementById("newsSearch");
+    const searchResults = document.getElementById("searchResults");
+
+    function normalizeText(text) {
+      return text
+        .toLowerCase()
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim();
+    }
+
+    function getSearchItems() {
+      const items = [];
+      const links = document.querySelectorAll("a[href]");
+
+      links.forEach(link => {
+        const card = link.querySelector(".card, .footer-news-card");
+        if (!card) return;
+
+        const title =
+          card.querySelector("h3, h4")?.textContent?.trim() || "";
+
+        const desc =
+          card.querySelector("p")?.textContent?.trim() || "";
+
+        const category =
+          card.querySelector(".category")?.textContent?.trim() || "Hír";
+
+        const href = link.getAttribute("href");
+
+        if (!title || !href || href === "#") return;
+
+        items.push({
+          title,
+          desc,
+          category,
+          href,
+          text: normalizeText(title + " " + desc + " " + category)
+        });
+      });
+
+      return items;
+    }
+
+    function renderResults(results) {
+      if (!results.length) {
+        searchResults.innerHTML = `<div class="search-no-result">Nincs találat.</div>`;
+        searchResults.classList.add("show");
+        return;
+      }
+
+      searchResults.innerHTML = results.map(item => `
+        <a class="search-result-item" href="${item.href}">
+          <div class="search-result-category">${item.category}</div>
+          <div class="search-result-title">${item.title}</div>
+          <div class="search-result-desc">${item.desc}</div>
+        </a>
+      `).join("");
+
+      searchResults.classList.add("show");
+    }
+
+    searchInput.addEventListener("input", () => {
+      const query = normalizeText(searchInput.value);
+
+      if (!query) {
+        searchResults.innerHTML = "";
+        searchResults.classList.remove("show");
+        return;
+      }
+
+      const items = getSearchItems();
+
+      const uniqueResults = items.filter(
+        (item, index, self) =>
+          index === self.findIndex(other => other.href === item.href)
+      );
+
+      const matches = uniqueResults
+        .filter(item => item.text.includes(query))
+        .slice(0, 6);
+
+      renderResults(matches);
+    });
+
+    document.addEventListener("click", (e) => {
+      if (!document.querySelector(".search").contains(e.target)) {
+        searchResults.classList.remove("show");
+      }
+    });
+
+    searchInput.addEventListener("focus", () => {
+      if (searchInput.value.trim() !== "" && searchResults.innerHTML.trim() !== "") {
+        searchResults.classList.add("show");
+      }
+    });
+
+    const pageButtons = document.querySelectorAll(".page-btn");
+    const newsPages = document.querySelectorAll(".news-page");
+
+    pageButtons.forEach(button => {
+      button.addEventListener("click", () => {
+        const targetPage = button.dataset.page;
+
+        newsPages.forEach(page => {
+          page.classList.remove("active");
+          if (page.dataset.page === targetPage) {
+            page.classList.add("active");
+          }
+        });
+
+        pageButtons.forEach(btn => btn.classList.remove("active"));
+        button.classList.add("active");
+
+        const sectionTop = document.querySelector(".category-line").offsetTop - 20;
+        window.scrollTo({
+          top: sectionTop,
+          behavior: "smooth"
+        });
+      });
+    });
+  </script>
+</body>
+
+</html>
