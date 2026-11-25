@@ -7,7 +7,7 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddOpenApi();
 
 // 2. ADATBÁZIS KAPCSOLÓ (Átállítva MySQL-re!)
-var useInMemory = false;
+var useInMemory = true;
 
 if (useInMemory)
 {
